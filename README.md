@@ -1,0 +1,2 @@
+# File_Exchange
+Develop a client-server application. To organize interaction over the network, support multiple connections, use the software interfaces (APIs) of the operating system.  The server and clients communicate using a socket-based protocol. The server must support a conditionally unlimited number of clients. At all stages of interaction between the client and the server, data processing should be provided, regardless of their size.
