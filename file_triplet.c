@@ -19,3 +19,9 @@ void calc_hash(FILE *file, uint8_t *hash) {
     }
     SHA256_Final(hash, &sha256_ctx);
 }
+
+void triplet_print(struct file_triplet *triplet) {
+    printf(" FILENAME: %s", triplet->filename);
+    printf(" FILESIZE: %lu", triplet->filesize);
+    printf(" FILE_HASH: %lu\n", (uint64_t)triplet->hash);
+}
