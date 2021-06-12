@@ -49,12 +49,11 @@ void list_add_front_file_triplet(struct list **l, const char *dir_path, const ch
 }
 
 int read_directory(char *filename, uint32_t space_count, struct list **l) {
-    //struct list *new_list = (struct list *) malloc(sizeof(struct list));
     errno = 0;
     DIR *directory = opendir(filename);
 
     if (directory == NULL) {
-        //perror("Can't read directory ");
+        perror("Can't read directory ");
         return -1;
     }
 

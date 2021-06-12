@@ -48,10 +48,3 @@ void list_destroy(struct list *l) {
         cur = next;
     }
 }
-
-void list_print(struct list *l) {
-    while (l) {
-        printf("%s\n", l->value->filename);
-        l = l->next;
-    }
-}
