@@ -17,6 +17,6 @@ struct list {
 void list_add_front(struct list **l, entry e);
 void list_add_back(struct list **l, entry e);
 void list_destroy(struct list *l);
-void list_print(struct list *l);
+void node_print(struct list *l);
 
 #endif //FILE_EXCHANGE_LIST_H

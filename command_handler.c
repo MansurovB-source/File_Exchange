@@ -7,13 +7,16 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "command_handler.h"
+#include "list.h"
 
 
 const static char *DISPLAY_CMD = "display";
 const static char *DOWNLOAD_CMD = "download";
 const static char *EXIT_CMD = "exit";
+const static char *HELP_CMD = "help";
 
-int parse(const char *cmd, char **triplet) {
+
+static int parse(const char *cmd, char **triplet) {
     const char *p = cmd;
     int count = 0;
 
@@ -59,18 +62,27 @@ void display_cmd(struct list *l, const char *file_name) {
     struct list *node = l;
     while (node != NULL) {
         if (!strcmp(node->value->filename, file_name)) {
-            list_print(node);
+            node_print(node);
             printf("\n");
         }
         node = node->next;
     }
 }
 
+void help_cmd() {
+    printf("display [file_name]\n");
+    printf("download [file_triplet]\n");
+    printf("help\n");
+    printf("exit\n");
+}
+
 // TODO
-void download_cmd(struct list *l, const char *triplet);
+void download_cmd(struct list *l, const char *triplet) {
+
+}
 
 
-int8_t cmd_handler(struct list *l, const char *cmd) {
+int8_t handler_cmd(struct list *l, const char *cmd) {
     char code = 0;
     char *triplet[4];
 
@@ -85,8 +97,12 @@ int8_t cmd_handler(struct list *l, const char *cmd) {
         display_cmd(l, triplet[1]);
     } else if (!strcmp(triplet[0], DOWNLOAD_CMD)) {
         download_cmd(l, triplet[1]);
+    } else if (!strcmp(triplet[0], HELP_CMD)) {
+        help_cmd();
     } else if (!strcmp(triplet[0], EXIT_CMD)) {
         code = 1;
+    } else {
+        printf("Unknown command\n");
     }
 
     free(triplet[0]);
@@ -96,7 +112,3 @@ int8_t cmd_handler(struct list *l, const char *cmd) {
 
     return code;
 }
-
-
-cha
-

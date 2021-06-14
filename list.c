@@ -29,6 +29,11 @@ static struct list *list_last(struct list *l) {
     return cur;
 }
 
+static void free_node(entry e) {
+    free(e->filename);
+    free(e);
+}
+
 void list_add_back(struct list **l, entry e) {
     if (*l) {
         list_last(*l)->next = node_create(e);
@@ -44,7 +49,14 @@ void list_destroy(struct list *l) {
     struct list *cur = l;
     while (cur) {
         struct list *next = cur->next;
+        free_node(cur->value);
         free(cur);
         cur = next;
     }
+}
+
+void node_print(struct list *l) {
+    printf(" %s", l->value->filename);
+    printf(" %lu", l->value->filesize);
+    printf(" %lu", (uint64_t) l->value->hash);
 }

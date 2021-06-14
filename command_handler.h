@@ -8,5 +8,7 @@
 #include "list.h"
 #include <stdint.h>
 
-int8_t cmd_handler(struct list *l, const char *cmd);
+int8_t handler_cmd(struct list *l, const char *cmd);
+void download_cmd(struct list *l, const char *triplet);
+void help_cmd();
 #endif //FILE_EXCHANGE_COMMAND_HANDLER_H
