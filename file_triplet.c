@@ -2,7 +2,33 @@
 // Created by behruz on 12.06.2021.
 //
 
+#include <string.h>
 #include "file_triplet.h"
+
+//TODO change hash reading
+static struct file_triplet *cmp_triplet(struct file_triplet *t, char *triplet) {
+    char triplet_str[2048] = {0};
+    strcat(triplet_str, t->filename);
+    strcat(triplet_str, " - ");
+    char size[512] = {0};
+    sprintf(size, "%lu", t->filesize);
+    strcat(triplet_str, size);
+    strcat(triplet_str, " - ");
+    strncat(triplet_str, t->hash, SHA256_DIGEST_LENGTH);
+
+//    char hash[1024] = {0};
+//    int cnt;
+//    for (int i = 0; i < sizeof(t->hash); i++) {
+//        cnt = sprintf(hash, "%u", t->hash[i]);
+//    }
+//    strcat(triplet_str, hash);
+
+    if (!strcmp(triplet, triplet_str)) {
+        return t;
+    } else {
+        return NULL;
+    }
+}
 
 void file_triplet_destroy(struct file_triplet *triplet) {
     free(triplet->filename);
@@ -23,5 +49,20 @@ void calc_hash(FILE *file, uint8_t *hash) {
 void triplet_print(struct file_triplet *triplet) {
     printf(" FILENAME: %s", triplet->filename);
     printf(" FILESIZE: %lu", triplet->filesize);
-    printf(" FILE_HASH: %lu\n", (uint64_t)triplet->hash);
+    printf(" HASH: ");
+    for (int i = 0; i < sizeof(triplet->hash); i++) {
+        printf("%u", triplet->hash[i]);
+    }
+    printf("\n");
+}
+
+struct file_triplet *find_triplet(struct list *l, char *triplet) {
+    struct list *current = l;
+    while (current->value != NULL) {
+        if (cmp_triplet(current->value, triplet) != NULL) {
+            return current->value;
+        }
+        current = current->next;
+    }
+    return NULL;
 }

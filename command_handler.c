@@ -62,7 +62,7 @@ void display_cmd(struct list *l, const char *file_name) {
     struct list *node = l;
     while (node != NULL) {
         if (!strcmp(node->value->filename, file_name)) {
-            node_print(node);
+            triplet_print(node->value);
             printf("\n");
         }
         node = node->next;
