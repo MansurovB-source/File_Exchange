@@ -8,8 +8,11 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "udp_search.h"
 #include "udp_server.h"
+#include "tcp_server.h"
+#include "tcp_client.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 2048
@@ -48,7 +51,16 @@ void *search_server_udp(char *triplet) {
 
     struct udp_server_answer *answer = (struct udp_server_answer *) buffer;
 
-    //TODO tcp client
+    if(answer->success) {
+        printf("Found, port: %d\n", answer->port);
+        pthread_t tcp_client;
+        struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
+        server_data->udp_server_ans = *answer;
+        server_data->ctx = NULL;
+        pthread_create(&tcp_client, NULL, start_client_tcp, server_data);
+    } else {
+        perror("Not found");
+    }
 
     close(socket_fd);
 

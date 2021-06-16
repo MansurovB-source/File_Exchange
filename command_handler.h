@@ -7,8 +7,12 @@
 
 #include "list.h"
 #include <stdint.h>
+#include "context.h"
 
-int8_t handler_cmd(struct list *l, const char *cmd);
+int8_t handler_cmd(struct context *ctx, const char *cmd);
+
 void download_cmd(struct list *l, const char *triplet);
+
 void help_cmd();
+
 #endif //FILE_EXCHANGE_COMMAND_HANDLER_H

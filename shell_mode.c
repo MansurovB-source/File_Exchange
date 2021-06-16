@@ -38,12 +38,12 @@ char *get_line(void) {
     return ptr;
 }
 
-void shell(struct list *l) {
+void shell(struct context *ctx) {
     char exit = 0;
     while ((!exit)) {
-        printf("> ");
+        printf("\n> ");
         char *line = get_line();
-        exit = handler_cmd(l, line);
+        exit = handler_cmd(ctx, line);
         free(line);
     }
 }

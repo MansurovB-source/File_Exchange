@@ -64,6 +64,7 @@ void display_cmd(struct list *l, const char *file_name) {
         if (!strcmp(node->value->filename, file_name)) {
             triplet_print(node->value);
             printf("\n");
+
         }
         node = node->next;
     }
@@ -82,7 +83,7 @@ void download_cmd(struct list *l, const char *triplet) {
 }
 
 
-int8_t handler_cmd(struct list *l, const char *cmd) {
+int8_t handler_cmd(struct context *ctx, const char *cmd) {
     char code = 0;
     char *triplet[4];
 
@@ -94,9 +95,9 @@ int8_t handler_cmd(struct list *l, const char *cmd) {
     parse(cmd, triplet);
 
     if (!strcmp(triplet[0], DISPLAY_CMD)) {
-        display_cmd(l, triplet[1]);
+        display_cmd(ctx->l, triplet[1]);
     } else if (!strcmp(triplet[0], DOWNLOAD_CMD)) {
-        download_cmd(l, triplet[1]);
+        download_cmd(ctx->l, triplet[1]);
     } else if (!strcmp(triplet[0], HELP_CMD)) {
         help_cmd();
     } else if (!strcmp(triplet[0], EXIT_CMD)) {

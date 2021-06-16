@@ -9,6 +9,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
+#include "tcp_server.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 2048
@@ -60,13 +62,19 @@ void *start_server_udp(void *data) {
 
     struct file_triplet *triplet = find_triplet(ctx->l, buffer);
 
-    struct udp_server_answer answer;
+    struct udp_server_answer answer = {0};
+
     if (triplet) {
         answer.success = 1;
         answer.port = 7898;
         answer.triplet = *triplet;
 
         //TODO tcp client
+        pthread_t tcp_client;
+        struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
+        server_data->udp_server_ans = answer;
+        server_data->ctx = NULL;
+        pthread_create(&tcp_client, NULL, start_server_tcp, server_data);
     }
 
     sendto(socket_fd, &answer, sizeof(struct udp_server_answer),

@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include "command_handler.h"
+#include "context.h"
 
-void shell(struct list *l);
+void shell(struct context *ctx);
+
 #endif //FILE_EXCHANGE_SHELL_MODE_H
