@@ -17,7 +17,8 @@
 #define BUFFER_SIZE 2048
 
 void *search_server_udp(void *data) {
-    char *triplet = data;
+    struct udp_client_data *udp_client_data;
+    char *triplet = udp_client_data->triplet_str;
     int socket_fd;
     if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("[UDP SEARCH]: {ERROR} Socket creation failed");
@@ -59,11 +60,12 @@ void *search_server_udp(void *data) {
     if (answer->success) {
         printf("[UDP SEARCH]: Found, port: %d\n", answer->port);
         pthread_t tcp_client;
-        struct tcp_client_data *client_data = malloc(sizeof(struct tcp_client_data));
-        client_data->port = answer->port;
-        client_data->triplet_dto = answer->triplet;
-        client_data->server_address = client_address.sin_addr.s_addr;
-        pthread_create(&tcp_client, NULL, start_client_tcp, client_data);
+        struct tcp_client_data *tcp_client_data = malloc(sizeof(struct tcp_client_data));
+        tcp_client_data->port = answer->port;
+        tcp_client_data->triplet_dto = answer->triplet;
+        tcp_client_data->server_address = client_address.sin_addr.s_addr;
+        tcp_client_data->ctx = udp_client_data->ctx;
+        pthread_create(&tcp_client, NULL, start_client_tcp, tcp_client_data);
     } else {
         perror("[UDP SEARCH]: {ERROR} Not found");
     }

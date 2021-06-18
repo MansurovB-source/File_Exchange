@@ -8,7 +8,7 @@
 #include "malloc.h"
 #include "file_triplet.h"
 
-typedef struct file_triplet *entry;
+typedef void *entry;
 
 struct list {
     entry value;
@@ -19,6 +19,8 @@ void list_add_front(struct list **l, entry e);
 
 void list_add_back(struct list **l, entry e);
 
-void list_destroy(struct list *l);
+void list_destroy(struct list *l, void (*destroy_entry)(void *));
+
+struct list *remove_element(struct list **l, struct list *element, void (*destroy_entry)(void *));
 
 #endif //FILE_EXCHANGE_LIST_H

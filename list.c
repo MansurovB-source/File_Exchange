@@ -21,6 +21,30 @@ void list_add_front(struct list **l, entry e) {
     }
 }
 
+//TODO check
+struct list *remove_element(struct list **l, struct list *element, void (*destroy_entry) (void *)) {
+    struct list *tmp = *l;
+    struct list *tmp_prev;
+    if(tmp == element) {
+        *l = tmp->next;
+        destroy_entry(tmp->value);
+        free(tmp);
+        return *l;
+    } else {
+        while(tmp != NULL) {
+            if(tmp == element) {
+                tmp_prev->next = element->next;
+                destroy_entry(tmp->value);
+                free(tmp);
+                return *l;
+            }
+            tmp_prev = tmp;
+            tmp = tmp->next;
+        }
+    }
+    return NULL;
+}
+
 static struct list *list_last(struct list *l) {
     if (l == NULL) { return NULL; }
     struct list *cur = l;
@@ -37,14 +61,15 @@ void list_add_back(struct list **l, entry e) {
     }
 }
 
-void list_destroy(struct list *l) {
+void list_destroy(struct list *l, void (*destroy_entry)(void *)) {
     if (!l) {
         return;
     }
     struct list *cur = l;
     while (cur) {
         struct list *next = cur->next;
-        file_triplet_destroy(cur->value);
+        destroy_entry(cur->value);
+
         free(cur);
         cur = next;
     }

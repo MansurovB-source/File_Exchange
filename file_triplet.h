@@ -23,7 +23,7 @@ struct file_triplet_dto {
     char hash[SHA256_DIGEST_LENGTH * 2];
 };
 
-void file_triplet_destroy(struct file_triplet *triplet);
+void file_triplet_destroy(void *data);
 void calc_hash(FILE *file, uint8_t *hash);
 void triplet_print(struct file_triplet *triplet);
 struct file_triplet *find_triplet(struct list *l, char *triplet);

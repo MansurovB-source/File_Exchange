@@ -11,7 +11,7 @@
 
 int8_t handler_cmd(struct context *ctx, const char *cmd);
 
-void download_cmd(const char *triplet);
+void download_cmd(const char *triplet, struct context *);
 
 void help_cmd();
 

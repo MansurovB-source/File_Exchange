@@ -22,7 +22,8 @@ static struct file_triplet *cmp_triplet(struct file_triplet *t, char *triplet) {
     }
 }
 
-void file_triplet_destroy(struct file_triplet *triplet) {
+void file_triplet_destroy(void *data) {
+    struct file_triplet *triplet = data;
     free(triplet->filename);
     free(triplet);
 }

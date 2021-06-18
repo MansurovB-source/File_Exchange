@@ -63,7 +63,8 @@ static int parse(const char *cmd, char **triplet) {
 void display_cmd(struct list *l, const char *file_name) {
     struct list *node = l;
     while (node != NULL) {
-        if (!strcmp(node->value->filename, file_name)) {
+        struct file_triplet *value = node->value;
+        if (!strcmp(value->filename, file_name)) {
             triplet_print(node->value);
             printf("\n");
 
@@ -80,11 +81,15 @@ void help_cmd() {
 }
 
 // TODO
-void download_cmd(const char *triplet) {
+void download_cmd(const char *triplet, struct context *ctx) {
     char *triplet_str = malloc(512);
     strcpy(triplet_str, triplet);
+    struct udp_client_data *udp_client_data = malloc(sizeof(struct udp_client_data));
+    udp_client_data->triplet_str = triplet_str;
+    udp_client_data->ctx = ctx;
+
     pthread_t *search_udp = (pthread_t *) malloc(sizeof(pthread_t));
-    pthread_create(search_udp, NULL, search_server_udp, triplet_str);
+    pthread_create(search_udp, NULL, search_server_udp, udp_client_data);
 
 
 }
@@ -104,7 +109,7 @@ int8_t handler_cmd(struct context *ctx, const char *cmd) {
     if (!strcmp(triplet[0], DISPLAY_CMD)) {
         display_cmd(ctx->l, triplet[1]);
     } else if (!strcmp(triplet[0], DOWNLOAD_CMD)) {
-        download_cmd(triplet[1]);
+        download_cmd(triplet[1], ctx);
     } else if (!strcmp(triplet[0], HELP_CMD)) {
         help_cmd();
     } else if (!strcmp(triplet[0], EXIT_CMD)) {

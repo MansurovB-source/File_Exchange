@@ -10,24 +10,36 @@
 #include <fcntl.h>
 #include "tcp_client.h"
 #include "tcp_server.h"
+#include "events.h"
+
 
 const static char *GET = "get";
 const static char *EXIT = "exit";
+const static char *PROGRESS = "prg";
 
-static void perform_download(int socket_fd, struct file_triplet_dto tripletDto) {
+
+static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, struct context *ctx) {
+    struct progress_transfer progress = {0};
     struct tcp_server_request request = {0};
     struct tcp_server_answer answer = {0};
+
+    progress.triplet = tripletDto;
+    put_download(ctx->events, &progress);
+
     int file = open(tripletDto.filename, O_WRONLY | O_CREAT, 00777);
     int counter = 0;
-    for(size_t i = 0; i < tripletDto.filesize; i += 4096) {
+    for (size_t i = 0; i < tripletDto.filesize; i += 4096) {
         strncpy(request.command, GET, 4);
         request.arg = 0;
         write(socket_fd, &request, sizeof(request));
         read(socket_fd, &answer, sizeof(answer));
         printf("[TCP_CLIENT] received data, len: %d\n", answer.len);
+        progress.transferred += answer.len;
+        put_download(ctx->events, &progress);
         pwrite(file, &answer.payload, answer.len, i);
         counter++;
     }
+    del_download(ctx->events, &progress);
     close(file);
     strncpy(request.command, EXIT, 4);
     write(socket_fd, &request, sizeof(request));
@@ -59,7 +71,16 @@ void *start_client_tcp(void *data) {
     } else
         printf("[TCP CLIENT]: Connected to the server...\n");
 
-    perform_download(socket_fd, client_data->triplet_dto);
+    char *start_download = malloc(256);
+    strcat(start_download, "Start downloading the file ");
+    strcat(start_download, client_data->triplet_dto.filename);
+    put_action(client_data->ctx->events, start_download);
+    perform_download(socket_fd, client_data->triplet_dto, client_data->ctx);
+
+    char *finish_download = malloc(256);
+    strcat(finish_download, "Finished downloading the file ");
+    strcat(finish_download, client_data->triplet_dto.filename);
+    put_action(client_data->ctx->events, finish_download);
 
     close(socket_fd);
     free(client_data);

@@ -15,6 +15,7 @@ struct tcp_server_data {
     struct sockaddr_in server_address;
     struct sockaddr_in client_address;
     struct file_triplet *triplet;
+    struct context *ctx;
 };
 
 struct tcp_server_request {
@@ -22,8 +23,8 @@ struct tcp_server_request {
     size_t arg;
 };
 
-void *start_server_tcp(void *data);
+void init_server_tcp(struct tcp_server_data *server_data);
 
-void init_tcp_server(struct tcp_server_data *server_data);
+void *start_server_tcp(void *data);
 
 #endif //FILE_EXCHANGE_TCP_SERVER_H

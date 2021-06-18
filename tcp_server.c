@@ -13,10 +13,15 @@
 #include "tcp_client.h"
 
 
-static void conversation(int socket_fd, struct file_triplet *triplet) {
+static void conversation(int socket_fd, struct file_triplet *triplet, struct context *ctx) {
     int file = open(triplet->filename, O_RDONLY, 00666);
     struct tcp_server_request request;
     struct tcp_server_answer answer;
+    struct progress_transfer progress = {0};
+    progress.triplet.filesize = triplet->filesize;
+    //TODO hash size
+    strncpy(progress.triplet.hash, triplet->hash, 64);
+    strcpy(progress.triplet.filename, triplet->filename);
 
     while (strcmp("exit", request.command)) {
         read(socket_fd, &request, sizeof(request));
@@ -29,8 +34,12 @@ static void conversation(int socket_fd, struct file_triplet *triplet) {
             pread(file, answer.payload, size, 4096 * request.arg);
             answer.len = size;
             write(socket_fd, &answer, sizeof(answer));
+        } else if (0 == strncmp("prg", request.command, 3)) {
+            progress.transferred = request.arg;
+            put_upload(ctx->events, &progress);
         }
     }
+    del_upload(ctx->events, &progress);
     close(file);
     printf("TCP: Server exit... \n");
 }
@@ -73,13 +82,23 @@ void *start_server_tcp(void *data) {
     size_t client_address_size = sizeof(server_data->client_address);
 
     if ((connect_fd = accept(server_data->socket_fd, (struct sockaddr *) &server_data->client_address,
-                (socklen_t *) &client_address_size)) < 0) {
+                             (socklen_t *) &client_address_size)) < 0) {
         perror("[TCP SERVER]: {ERROR} Server accept failed...");
         exit(0);
     }
     printf("[TCP SERVER]: {ERROR} Server accept the client...\n");
 
-    conversation(connect_fd, server_data->triplet);
+    char *start_upload = malloc(256);
+    strcat(start_upload, "Started uploading the file ");
+    strcat(start_upload, server_data->triplet->filename);
+    put_action(server_data->ctx->events, start_upload);
+    conversation(connect_fd, server_data->triplet, server_data->ctx);
+
+    char *finished_upload = malloc(256);
+    strcat(finished_upload, "Upload finished ");
+    strcat(finished_upload, server_data->triplet->filename);
+    put_action(server_data->ctx->events, finished_upload);
+
     close(connect_fd);
     free(server_data);
     return NULL;

@@ -69,7 +69,8 @@ void *start_server_udp(void *data) {
         pthread_t tcp_client;
         struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
         server_data->triplet = triplet;
-        init_tcp_server(server_data);
+        server_data->ctx = ctx;
+        init_server_tcp(server_data);
 
         answer.success = 1;
         answer.port = server_data->port;
