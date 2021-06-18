@@ -14,7 +14,13 @@
 struct file_triplet {
     char *filename;
     uint64_t filesize;
-    char hash[SHA256_DIGEST_LENGTH];
+    char hash[SHA256_DIGEST_LENGTH * 2];
+};
+
+struct file_triplet_dto {
+    char filename[256];
+    uint64_t filesize;
+    char hash[SHA256_DIGEST_LENGTH * 2];
 };
 
 void file_triplet_destroy(struct file_triplet *triplet);

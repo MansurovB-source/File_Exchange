@@ -13,7 +13,7 @@ struct udp_server_answer {
     uint8_t success;
     uint16_t port;
     //TODO struct file_triplet_dto;
-    struct file_triplet triplet;
+    struct file_triplet_dto triplet;
 };
 
 void *start_server_udp(void *data);

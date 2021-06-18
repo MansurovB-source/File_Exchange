@@ -6,8 +6,10 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <pthread.h>
 #include "command_handler.h"
 #include "list.h"
+#include "udp_search.h"
 
 
 const static char *DISPLAY_CMD = "display";
@@ -78,7 +80,12 @@ void help_cmd() {
 }
 
 // TODO
-void download_cmd(struct list *l, const char *triplet) {
+void download_cmd(const char *triplet) {
+    char *triplet_str = malloc(512);
+    strcpy(triplet_str, triplet);
+    pthread_t *search_udp = (pthread_t *) malloc(sizeof(pthread_t));
+    pthread_create(search_udp, NULL, search_server_udp, triplet_str);
+
 
 }
 
@@ -97,7 +104,7 @@ int8_t handler_cmd(struct context *ctx, const char *cmd) {
     if (!strcmp(triplet[0], DISPLAY_CMD)) {
         display_cmd(ctx->l, triplet[1]);
     } else if (!strcmp(triplet[0], DOWNLOAD_CMD)) {
-        download_cmd(ctx->l, triplet[1]);
+        download_cmd(triplet[1]);
     } else if (!strcmp(triplet[0], HELP_CMD)) {
         help_cmd();
     } else if (!strcmp(triplet[0], EXIT_CMD)) {

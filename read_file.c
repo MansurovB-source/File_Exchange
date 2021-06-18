@@ -23,6 +23,30 @@ static void print_space(uint32_t space_count) {
     }
 }
 
+static void get_hex_chars(uint8_t byte, char *hex) {
+    unsigned char firstNibble;  // a Nibble is 4 bits, half a byte, one hexadecimal character
+    unsigned char secondNibble;
+
+
+    firstNibble = (byte >> 4);  // isolate first 4 bits
+
+    if (firstNibble < 10U) {
+        hex[0] = (char) ('0' + firstNibble);
+    } else {
+        firstNibble -= 10U;
+        hex[0] = (char) ('A' + firstNibble);
+    }
+
+    secondNibble = (byte & 0x0F);  // isolate last 4 bits
+
+    if (secondNibble < 10U) {
+        hex[1] = (char) ('0' + secondNibble);
+    } else {
+        secondNibble -= 10U;
+        hex[1] = (char) ('A' + secondNibble);
+    }
+}
+
 
 void list_add_front_file_triplet(struct list **l, const char *dir_path, const char *file_name) {
     char filename[strlen(dir_path) + strlen(file_name) + 2];
@@ -42,7 +66,15 @@ void list_add_front_file_triplet(struct list **l, const char *dir_path, const ch
     triplet->filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    calc_hash(file, triplet->hash);
+    uint8_t hash[SHA256_DIGEST_LENGTH];
+    calc_hash(file, hash);
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        char hex[2];
+        get_hex_chars(hash[i], hex);
+        triplet->hash[2 * i] = hex[0];
+        triplet->hash[2 * i + 1] = hex[1];
+    }
+
     fclose(file);
     list_add_front(l, triplet);
 

@@ -11,58 +11,65 @@
 #include <pthread.h>
 #include "udp_search.h"
 #include "udp_server.h"
-#include "tcp_server.h"
 #include "tcp_client.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 2048
 
-void *search_server_udp(char *triplet) {
+void *search_server_udp(void *data) {
+    char *triplet = data;
     int socket_fd;
     if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("Can't create socket");
+        perror("[UDP SEARCH]: {ERROR} Socket creation failed");
         exit(-1);
     }
 
     struct sockaddr_in server_address;
-
+    struct sockaddr_in client_address;
     memset(&server_address, 0, sizeof(struct sockaddr_in));
+    memset(&client_address, 0, sizeof(struct sockaddr_in));
 
     int broadcast = 1;
     setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
 
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(PORT);
-    server_address.sin_addr.s_addr = INADDR_ANY;
+    server_address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 
-    int n;
+    size_t n;
     size_t server_address_size = sizeof(server_address);
+    size_t client_address_size = sizeof(client_address);
 
     if ((sendto(socket_fd, triplet, strlen(triplet), 0, (const struct sockaddr *) &server_address,
-                sizeof(server_address))) < 0) {
+                server_address_size)) < 0) {
         perror("ERROR: Can't send data: ");
     }
 
-    char buffer[BUFFER_SIZE];
-    n = recvfrom(socket_fd, (char *) buffer, BUFFER_SIZE,
-                 MSG_WAITALL, (struct sockaddr *) &server_address,
-                 (socklen_t *) &server_address_size);
+    char buffer[BUFFER_SIZE] = {0};
+    if ((n = recvfrom(socket_fd, (char *) buffer, BUFFER_SIZE,
+                      MSG_WAITALL, (struct sockaddr *) &client_address,
+                      (socklen_t *) &client_address_size)) == -1) {
+        perror("[UDP SEARCH]: {ERROR} From udp server");
+    }
+
     buffer[n] = '\0';
 
     struct udp_server_answer *answer = (struct udp_server_answer *) buffer;
 
-    if(answer->success) {
-        printf("Found, port: %d\n", answer->port);
+    if (answer->success) {
+        printf("[UDP SEARCH]: Found, port: %d\n", answer->port);
         pthread_t tcp_client;
-        struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
-        server_data->udp_server_ans = *answer;
-        server_data->ctx = NULL;
-        pthread_create(&tcp_client, NULL, start_client_tcp, server_data);
+        struct tcp_client_data *client_data = malloc(sizeof(struct tcp_client_data));
+        client_data->port = answer->port;
+        client_data->triplet_dto = answer->triplet;
+        client_data->server_address = client_address.sin_addr.s_addr;
+        pthread_create(&tcp_client, NULL, start_client_tcp, client_data);
     } else {
-        perror("Not found");
+        perror("[UDP SEARCH]: {ERROR} Not found");
     }
 
     close(socket_fd);
+    free(triplet);
 
     return NULL;
 }

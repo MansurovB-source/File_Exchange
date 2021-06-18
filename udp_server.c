@@ -22,7 +22,7 @@ void *start_server_udp(void *data) {
 
     int socket_fd;
     if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("Can't create socket");
+        perror("[UDP SERVER]: {ERROR} Socket creation failed");
         exit(-1);
     }
 
@@ -33,20 +33,20 @@ void *start_server_udp(void *data) {
     memset(&client_address, 0, sizeof(struct sockaddr_in));
 
     int broadcast = 1;
-
     setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
 
+    uint16_t port = PORT;
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(PORT);
+    server_address.sin_port = htons(port);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(socket_fd, (const struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-        perror("Binding is failed");
-        exit(-1);
+    while (bind(socket_fd, (const struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+        printf("[UDP SERVER]: {ERROR} Binding on port %d failed\n", port++);
+        server_address.sin_port = htons(port);
     }
 
-    printf("Successfully started server on PORT: %d\n", PORT);
+    printf("[UDP SERVER]: Successfully started server on PORT: %d!\n", port);
 
     char buffer[BUFFER_SIZE];
     size_t client_address_size = sizeof(client_address);
@@ -54,26 +54,30 @@ void *start_server_udp(void *data) {
     while (!ctx->exit) {
         if ((recvfrom(socket_fd, (char *) buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &client_address,
                       (socklen_t *) &client_address_size)) > BUFFER_SIZE) {
-            printf("TOO LONG MESSAGE\n");
+            printf("[UDP SERVER]: {ERROR} TOO LONG MESSAGE\n");
         }
     }
 
-    printf("REQUEST: %s\n", buffer);
+    printf("[UDP SERVER]: REQUEST: %s\n", buffer);
 
     struct file_triplet *triplet = find_triplet(ctx->l, buffer);
 
     struct udp_server_answer answer = {0};
 
     if (triplet) {
-        answer.success = 1;
-        answer.port = 7898;
-        answer.triplet = *triplet;
-
         //TODO tcp client
         pthread_t tcp_client;
         struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
-        server_data->udp_server_ans = answer;
-        server_data->ctx = NULL;
+        server_data->triplet = triplet;
+        init_tcp_server(server_data);
+
+        answer.success = 1;
+        answer.port = server_data->port;
+        answer.triplet.filesize = triplet->filesize;
+        //TODO hash size ?
+        strncpy(answer.triplet.hash, triplet->hash, 64);
+        strcpy(answer.triplet.filename, triplet->filename);
+
         pthread_create(&tcp_client, NULL, start_server_tcp, server_data);
     }
 

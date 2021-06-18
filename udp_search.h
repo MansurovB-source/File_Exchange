@@ -5,6 +5,6 @@
 #ifndef FILE_EXCHANGE_UDP_SEARCH_H
 #define FILE_EXCHANGE_UDP_SEARCH_H
 
-void *search_server_udp();
+void *search_server_udp(void *data);
 
 #endif //FILE_EXCHANGE_UDP_SEARCH_H

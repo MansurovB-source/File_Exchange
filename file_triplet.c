@@ -14,15 +14,7 @@ static struct file_triplet *cmp_triplet(struct file_triplet *t, char *triplet) {
     sprintf(size, "%lu", t->filesize);
     strcat(triplet_str, size);
     strcat(triplet_str, " - ");
-    strncat(triplet_str, t->hash, SHA256_DIGEST_LENGTH);
-
-//    char hash[1024] = {0};
-//    int cnt;
-//    for (int i = 0; i < sizeof(t->hash); i++) {
-//        cnt = sprintf(hash, "%u", t->hash[i]);
-//    }
-//    strcat(triplet_str, hash);
-
+    strncat(triplet_str, t->hash, SHA256_DIGEST_LENGTH * 2);
     if (!strcmp(triplet, triplet_str)) {
         return t;
     } else {
@@ -51,7 +43,7 @@ void triplet_print(struct file_triplet *triplet) {
     printf(" FILESIZE: %lu", triplet->filesize);
     printf(" HASH: ");
     for (int i = 0; i < sizeof(triplet->hash); i++) {
-        printf("%u", triplet->hash[i]);
+        printf("%c", triplet->hash[i]);
     }
     printf("\n");
 }
