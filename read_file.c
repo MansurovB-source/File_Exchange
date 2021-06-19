@@ -48,11 +48,19 @@ static void get_hex_chars(uint8_t byte, char *hex) {
 }
 
 
-void list_add_front_file_triplet(struct list **l, const char *dir_path, const char *file_name) {
+void list_add_front_file_triplet(struct list **l, const char *dir_path, const char *file_name,
+                                 const char *filename_with_path) {
     char filename[strlen(dir_path) + strlen(file_name) + 2];
+    char relative_path[512] = {0};
     strcpy(filename, dir_path);
     strcat(filename, "/");
     strcat(filename, file_name);
+
+    if (filename_with_path != NULL) {
+        strcat(relative_path, filename_with_path);
+    }
+    strcat(relative_path, file_name);
+//    strcat(relative_path, "/");
 
     struct file_triplet *triplet = (struct file_triplet *) malloc(sizeof(struct file_triplet));
     FILE *file = fopen(filename, "rb");
@@ -61,7 +69,9 @@ void list_add_front_file_triplet(struct list **l, const char *dir_path, const ch
         return;
     }
     triplet->filename = malloc(strlen(filename) + 1);
+    triplet->filepath = malloc(512);
     strcpy(triplet->filename, filename);
+    strcpy(triplet->filepath, relative_path);
     fseek(file, 0, SEEK_END);
     triplet->filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
@@ -80,7 +90,7 @@ void list_add_front_file_triplet(struct list **l, const char *dir_path, const ch
 
 }
 
-int read_directory(char *filename, uint32_t space_count, struct list **l) {
+int read_directory(char *filename, uint32_t space_count, struct list **l, char *relative_path) {
     errno = 0;
     DIR *directory = opendir(filename);
 
@@ -100,14 +110,22 @@ int read_directory(char *filename, uint32_t space_count, struct list **l) {
 
         if (is_dir(dir_entry)) {
             printf("|-- DIR: %s\n", dir_entry->d_name);
-            char dir_name[strlen(filename) + strlen(dir_entry->d_name) + 2];
-            strcpy(dir_name, filename);
-            strcat(dir_name, "/");
-            strcat(dir_name, dir_entry->d_name);
-            read_directory(dir_name, current_space_count, l);
+            char full_path[strlen(filename) + strlen(dir_entry->d_name) + 2];
+            strcpy(full_path, filename);
+            strcat(full_path, "/");
+            strcat(full_path, dir_entry->d_name);
+
+            char full_relative_path[512] = {0};
+            if (relative_path != NULL) {
+                strcat(full_relative_path, relative_path);
+            }
+            strcat(full_relative_path, dir_entry->d_name);
+            strcat(full_relative_path, "/");
+
+            read_directory(full_path, current_space_count, l, full_relative_path);
         } else {
             printf("|-- FILE: %s\n", dir_entry->d_name);
-            list_add_front_file_triplet(l, filename, dir_entry->d_name);
+            list_add_front_file_triplet(l, filename, dir_entry->d_name, relative_path);
         }
     }
     closedir(directory);

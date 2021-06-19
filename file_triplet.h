@@ -15,6 +15,7 @@ struct file_triplet {
     char *filename;
     uint64_t filesize;
     char hash[SHA256_DIGEST_LENGTH * 2];
+    char *filepath;
 };
 
 struct file_triplet_dto {

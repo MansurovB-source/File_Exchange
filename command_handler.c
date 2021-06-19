@@ -64,7 +64,7 @@ void display_cmd(struct context *ctx, const char *file_name) {
 
     while (node != NULL) {
         struct file_triplet *triplet = node->value;
-        if (!strcmp(triplet->filename, file_name)) {
+        if (!strcmp(triplet->filepath, file_name)) {
             char *triplet_str = malloc(256);
             char *filesize_str = malloc(16);
 

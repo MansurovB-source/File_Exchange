@@ -25,6 +25,7 @@ static struct file_triplet *cmp_triplet(struct file_triplet *t, char *triplet) {
 void file_triplet_destroy(void *data) {
     struct file_triplet *triplet = data;
     free(triplet->filename);
+    free(triplet->filepath);
     free(triplet);
 }
 
@@ -40,7 +41,7 @@ void calc_hash(FILE *file, uint8_t *hash) {
 }
 
 void triplet_print(struct file_triplet *triplet) {
-    printf(" FILENAME: %s", triplet->filename);
+    printf(" FILENAME: %s", triplet->filepath);
     printf(" FILESIZE: %lu", triplet->filesize);
     printf(" HASH: ");
     for (int i = 0; i < sizeof(triplet->hash); i++) {

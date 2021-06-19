@@ -19,11 +19,16 @@ static void conversation(int socket_fd, struct file_triplet *triplet, struct con
     struct tcp_server_request request;
     struct tcp_server_answer answer;
     struct progress_transfer progress = {0};
-    progress.triplet.filesize = triplet->filesize;
-    //TODO hash size
-    strncpy(progress.triplet.hash, triplet->hash, 64);
-    strcpy(progress.triplet.filename, triplet->filename);
-
+    struct progress_transfer *cur_progress = &progress;
+    struct list *exist_upload = find_upload(ctx->events, cur_progress);
+    if (exist_upload) {
+        cur_progress = exist_upload->value;
+    } else {
+        progress.triplet.filesize = triplet->filesize;
+        strncpy(progress.triplet.hash, triplet->hash, 32);
+        strcpy(progress.triplet.filename, triplet->filename);
+        put_upload(ctx->events, &progress);
+    }
     while (strcmp("exit", request.command) != 0) {
         read(socket_fd, &request, sizeof(request));
         //printf("[TCP SERVER]: From client: %s\t to server: ", request.command);
@@ -36,13 +41,13 @@ static void conversation(int socket_fd, struct file_triplet *triplet, struct con
             answer.len = size;
             write(socket_fd, &answer, sizeof(answer));
         } else if (0 == strncmp("prg", request.command, 3)) {
-            progress.transferred = request.arg;
-            put_upload(ctx->events, &progress);
+            cur_progress->transferred = request.arg;
+            put_upload(ctx->events, cur_progress);
         }
     }
-    del_upload(ctx->events, &progress);
+    del_upload(ctx->events, cur_progress);
     close(file);
-    printf("TCP: Server exit... \n");
+    //printf("TCP: Server exit... \n");
 }
 
 void init_server_tcp(struct tcp_server_data *server_data) {

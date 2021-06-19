@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include "events.h"
+#include "ui_module.h"
 
 static void destroy_transfer_progress(void *data) {
     struct progress_transfer *progress_transfer = data;
@@ -36,9 +37,9 @@ void destroy_events(struct events_data *events_data) {
     list_destroy(events_data->upload_list, destroy_message_actions);
 }
 
-static struct list *fine_transfer_progress(struct list *transfer_list, struct progress_transfer *transfer_progress) {
+static struct list *find_transfer_progress(struct list *transfer_list, struct progress_transfer *transfer_progress) {
     struct list *tmp = transfer_list;
-    while (tmp != NULL) {
+    while (tmp != NULL && transfer_progress != NULL) {
         struct progress_transfer *tmp_value = tmp->value;
         if (tmp_value
             && 0 == strcmp(tmp_value->triplet.filename, transfer_progress->triplet.filename)
@@ -52,7 +53,7 @@ static struct list *fine_transfer_progress(struct list *transfer_list, struct pr
 
 static void time_tag(char *str) {
     time_t timer = time(NULL);
-    struct tm* info;
+    struct tm *info;
     info = localtime(&timer);
     strftime(str, 29, "[%H:%M:%S %Y-%m-%d] ", info);
 }
@@ -63,24 +64,28 @@ void put_action(struct events_data *events_data, char *str) {
     time_tag(log);
     strcat(log, str);
     list_add_front(&events_data->actions_list, log);
+    render_log_area(events_data->ui_data, 1);
     pthread_mutex_unlock(&events_data->actions_mutex);
 }
 
 void put_download(struct events_data *events_data, struct progress_transfer *transfer_progress) {
     pthread_mutex_lock(&events_data->download_mutex);
-    struct list *found = fine_transfer_progress(events_data->download_list, transfer_progress);
+    struct list *found = find_transfer_progress(events_data->download_list, transfer_progress);
+    char do_clear = 0;
     if (found) {
         struct progress_transfer *data = found->value;
         data->transferred = transfer_progress->transferred;
     } else {
         list_add_front(&events_data->download_list, transfer_progress);
+        do_clear = 1;
     }
+    render_transfer_area(events_data->ui_data, do_clear);
     pthread_mutex_unlock(&events_data->download_mutex);
 }
 
 void del_download(struct events_data *events_data, struct progress_transfer *transfer_progress) {
     pthread_mutex_lock(&events_data->download_mutex);
-    struct list *found = fine_transfer_progress(events_data->download_list, transfer_progress);
+    struct list *found = find_transfer_progress(events_data->download_list, transfer_progress);
     if (found) {
         //TODO check
         events_data->download_list = remove_element(&events_data->download_list, found, destroy_transfer_progress);
@@ -88,27 +93,31 @@ void del_download(struct events_data *events_data, struct progress_transfer *tra
             printf("[EVENTS]: {ERROR} On deleting download");
         }
     } else {
-        printf("[EVENTS]: {ERROR} On deleting download");
+        //printf("[EVENTS]: {ERROR} On deleting download");
 
     }
+    render_transfer_area(events_data->ui_data, 1);
     pthread_mutex_unlock(&events_data->download_mutex);
 }
 
 void put_upload(struct events_data *events_data, struct progress_transfer *transfer_progress) {
     pthread_mutex_lock(&events_data->upload_mutex);
-    struct list *found = fine_transfer_progress(events_data->upload_list, transfer_progress);
+    struct list *found = find_transfer_progress(events_data->upload_list, transfer_progress);
+    char do_clear = 0;
     if (found) {
         struct progress_transfer *data = found->value;
         data->transferred = transfer_progress->transferred;
     } else {
         list_add_front(&events_data->upload_list, transfer_progress);
+        do_clear = 1;
     }
+    render_transfer_area(events_data->ui_data, do_clear);
     pthread_mutex_unlock(&events_data->upload_mutex);
 }
 
 void del_upload(struct events_data *events_data, struct progress_transfer *transfer_progress) {
     pthread_mutex_lock(&events_data->upload_mutex);
-    struct list *found = fine_transfer_progress(events_data->upload_list, transfer_progress);
+    struct list *found = find_transfer_progress(events_data->upload_list, transfer_progress);
     if (found) {
         //TODO check
         events_data->upload_list = remove_element(&events_data->upload_list, found, destroy_transfer_progress);
@@ -116,8 +125,23 @@ void del_upload(struct events_data *events_data, struct progress_transfer *trans
             printf("[EVENTS]: {ERROR} On deleting upload");
         }
     } else {
-        printf("[EVENTS]: {ERROR} On deleting upload");
+        //printf("[EVENTS]: {ERROR} On deleting upload");
 
     }
+    render_transfer_area(events_data->ui_data, 0);
     pthread_mutex_unlock(&events_data->upload_mutex);
+}
+
+struct list *find_download(struct events_data *events_data, struct progress_transfer *progress) {
+    pthread_mutex_lock(&events_data->download_mutex);
+    struct list *cur = find_transfer_progress(events_data->download_list, progress);
+    pthread_mutex_unlock(&events_data->download_mutex);
+    return cur;
+}
+
+struct list *find_upload(struct events_data *events_data, struct progress_transfer *progress) {
+    pthread_mutex_lock(&events_data->upload_mutex);
+    struct list *cur = find_transfer_progress(events_data->download_list, progress);
+    pthread_mutex_unlock(&events_data->upload_mutex);
+    return cur;
 }

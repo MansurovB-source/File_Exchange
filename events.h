@@ -11,6 +11,7 @@
 struct progress_transfer {
     size_t transferred;
     struct file_triplet_dto triplet;
+    _Atomic size_t global;
 };
 
 struct events_data {
@@ -36,5 +37,10 @@ void del_download(struct events_data *events_data, struct progress_transfer *tra
 void put_upload(struct events_data *events_data, struct progress_transfer *transfer_progress);
 
 void del_upload(struct events_data *events_data, struct progress_transfer *transfer_progress);
+
+struct list *find_download(struct events_data *events_data, struct progress_transfer *progress);
+
+struct list *find_upload(struct events_data *events_data, struct progress_transfer *progress);
+
 
 #endif //FILE_EXCHANGE_EVENTS_H

@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
         return 0;
     } else {
         struct list *l = NULL;
-        int ret = read_directory(argv[1], 0, &l);
+        int ret = read_directory(argv[1], 0, &l, NULL);
         if (ret == -1) {
             perror("[MAIN]: {ERROR} Unable to access directory");
             return 0;
@@ -22,22 +22,24 @@ int main(int argc, char *argv[]) {
         ctx->l = l;
         ctx->exit = 0;
 
-        iu
         struct events_data *events = malloc(sizeof(struct events_data));
         init_events(events);
         ctx->events = events;
 
-        struct list *p_l = l;
-        while (p_l != NULL) {
-            triplet_print(p_l->value);
-            p_l = p_l->next;
-        }
+        struct ui_data *ui_data = malloc(sizeof(struct ui_data));
+        init_ui_data(ui_data);
+        events->ui_data = ui_data;
+        ui_data->ctx = ctx;
+
+//        struct list *p_l = l;
+//        while (p_l != NULL) {
+//            triplet_print(p_l->value);
+//            p_l = p_l->next;
+//        }
 
         pthread_t udp_server;
         pthread_create(&udp_server, NULL, start_server_udp, ctx);
-        puts("before launch");
-            launch(ctx);
-        puts("after launch");
+        launch(ui_data);
         pthread_join(udp_server, NULL);
 
         list_destroy(l, file_triplet_destroy);

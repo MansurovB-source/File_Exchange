@@ -23,23 +23,38 @@ static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, 
     struct tcp_server_request request = {0};
     struct tcp_server_answer answer = {0};
 
+    struct progress_transfer *cur_progress = &progress;
+
+    struct list *exist_download = find_download(ctx->events, &progress);
+    if (exist_download) {
+        cur_progress = exist_download->value;
+    } else {
+        put_download(ctx->events, &progress);
+    }
     progress.triplet = tripletDto;
     put_download(ctx->events, &progress);
 
     int file = open(tripletDto.filename, O_WRONLY | O_CREAT, 00777);
     int counter = 0;
-    for (size_t i = 0; i < tripletDto.filesize; i += 4096) {
-        strncpy(request.command, GET, 4);
-        request.arg = 0;
+
+    while (cur_progress->global * 4096 < tripletDto.filesize) {
+        strncpy(request.command, GET, 3);
+        request.arg = cur_progress->global++;
+        if (request.arg * 4096 > tripletDto.filesize) {
+            break;
+        }
         write(socket_fd, &request, sizeof(request));
         read(socket_fd, &answer, sizeof(answer));
         //printf("[TCP_CLIENT] received data, len: %d\n", answer.len);
-        progress.transferred += answer.len;
-        put_download(ctx->events, &progress);
-        pwrite(file, &answer.payload, answer.len, i);
-        counter++;
+        cur_progress->transferred += answer.len;
+        put_download(ctx->events, cur_progress);
+        pwrite(file, &answer.payload, answer.len, request.arg * 4096);
+
+        strncpy(request.command, PROGRESS, 3);
+        request.arg = cur_progress->transferred;
+        write(socket_fd, &request, sizeof(request));
     }
-    del_download(ctx->events, &progress);
+    del_download(ctx->events, cur_progress);
     close(file);
     strncpy(request.command, EXIT, 4);
     write(socket_fd, &request, sizeof(request));
