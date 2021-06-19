@@ -22,17 +22,17 @@ void list_add_front(struct list **l, entry e) {
 }
 
 //TODO check
-struct list *remove_element(struct list **l, struct list *element, void (*destroy_entry) (void *)) {
+struct list *remove_element(struct list **l, struct list *element, void (*destroy_entry)(void *)) {
     struct list *tmp = *l;
     struct list *tmp_prev;
-    if(tmp == element) {
+    if (tmp == element) {
         *l = tmp->next;
         destroy_entry(tmp->value);
         free(tmp);
         return *l;
     } else {
-        while(tmp != NULL) {
-            if(tmp == element) {
+        while (tmp != NULL) {
+            if (tmp == element) {
                 tmp_prev->next = element->next;
                 destroy_entry(tmp->value);
                 free(tmp);
@@ -73,4 +73,16 @@ void list_destroy(struct list *l, void (*destroy_entry)(void *)) {
         free(cur);
         cur = next;
     }
+}
+
+struct list *get(struct list *l, size_t index) {
+    size_t i = 0;
+    while (l != NULL) {
+        if (i == index) {
+            return l;
+        }
+        i++;
+        l = l->next;
+    }
+    return NULL;
 }

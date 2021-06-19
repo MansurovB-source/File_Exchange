@@ -50,9 +50,19 @@ static struct list *fine_transfer_progress(struct list *transfer_list, struct pr
     return NULL;
 }
 
+static void time_tag(char *str) {
+    time_t timer = time(NULL);
+    struct tm* info;
+    info = localtime(&timer);
+    strftime(str, 29, "[%H:%M:%S %Y-%m-%d] ", info);
+}
+
 void put_action(struct events_data *events_data, char *str) {
     pthread_mutex_lock(&events_data->actions_mutex);
-    list_add_front(&events_data->actions_list, str);
+    char *log = malloc(512);
+    time_tag(log);
+    strcat(log, str);
+    list_add_front(&events_data->actions_list, log);
     pthread_mutex_unlock(&events_data->actions_mutex);
 }
 

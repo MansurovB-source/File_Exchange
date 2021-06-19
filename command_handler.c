@@ -16,7 +16,7 @@ const static char *DISPLAY_CMD = "display";
 const static char *DOWNLOAD_CMD = "download";
 const static char *EXIT_CMD = "exit";
 const static char *HELP_CMD = "help";
-
+const static char *UNKNOWN_COMMAND = "unknown_cmd";
 
 static int parse(const char *cmd, char **triplet) {
     const char *p = cmd;
@@ -56,28 +56,38 @@ static int parse(const char *cmd, char **triplet) {
         perror("Illegal character");
         return -1;
     }
-
     return count;
 }
 
-void display_cmd(struct list *l, const char *file_name) {
-    struct list *node = l;
-    while (node != NULL) {
-        struct file_triplet *value = node->value;
-        if (!strcmp(value->filename, file_name)) {
-            triplet_print(node->value);
-            printf("\n");
+void display_cmd(struct context *ctx, const char *file_name) {
+    struct list *node = ctx->l;
 
+    while (node != NULL) {
+        struct file_triplet *triplet = node->value;
+        if (!strcmp(triplet->filename, file_name)) {
+            char *triplet_str = malloc(256);
+            char *filesize_str = malloc(16);
+
+            strcat(triplet_str, triplet->filename);
+            strcat(triplet_str, ":");
+            sprintf(filesize_str, "%ld", triplet->filesize);
+            strcat(triplet_str, filesize_str);
+            strcat(triplet_str, ":");
+            strncat(triplet_str, triplet->hash, 64);
+
+            put_action(ctx->events, triplet_str);
+            free(triplet_str);
+            free(filesize_str);
         }
         node = node->next;
     }
 }
 
-void help_cmd() {
-    printf("display [file_name]\n");
-    printf("download [file_triplet]\n");
-    printf("help\n");
-    printf("exit\n");
+void help_cmd(struct context *ctx) {
+    put_action(ctx->events, "display [file_name]");
+    put_action(ctx->events, "download [file_triplet]");
+    put_action(ctx->events, "help");
+    put_action(ctx->events, "exit");
 }
 
 // TODO
@@ -99,23 +109,24 @@ int8_t handler_cmd(struct context *ctx, const char *cmd) {
     char code = 0;
     char *triplet[4];
 
-    triplet[0] = calloc(1, 256);
-    triplet[1] = calloc(1, 256);
-    triplet[2] = calloc(1, 256);
-    triplet[3] = calloc(1, 256);
+    triplet[0] = malloc(256);
+    triplet[1] = malloc(256);
+    triplet[2] = malloc(256);
+    triplet[3] = malloc(256);
 
     parse(cmd, triplet);
 
     if (!strcmp(triplet[0], DISPLAY_CMD)) {
-        display_cmd(ctx->l, triplet[1]);
+        display_cmd(ctx, triplet[1]);
     } else if (!strcmp(triplet[0], DOWNLOAD_CMD)) {
         download_cmd(triplet[1], ctx);
     } else if (!strcmp(triplet[0], HELP_CMD)) {
-        help_cmd();
+        help_cmd(ctx);
     } else if (!strcmp(triplet[0], EXIT_CMD)) {
         code = 1;
+        ctx->exit = 1;
     } else {
-        printf("Unknown command\n");
+        put_action(ctx->events, UNKNOWN_COMMAND);
     }
 
     free(triplet[0]);

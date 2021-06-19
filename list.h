@@ -23,4 +23,7 @@ void list_destroy(struct list *l, void (*destroy_entry)(void *));
 
 struct list *remove_element(struct list **l, struct list *element, void (*destroy_entry)(void *));
 
+struct list *get(struct list *l, size_t index) {
+
+
 #endif //FILE_EXCHANGE_LIST_H
