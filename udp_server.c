@@ -42,11 +42,15 @@ void *start_server_udp(void *data) {
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     while (bind(socket_fd, (const struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-        printf("[UDP SERVER]: {ERROR} Binding on port %d failed\n", port++);
+        char fail[128] = {0};
+        sprintf(fail, "[UDP SERVER]: {ERROR} Binding on port %d failed\n", port++);
+        put_action(ctx->events, fail);
         server_address.sin_port = htons(port);
     }
 
-    printf("[UDP SERVER]: Successfully started server on PORT: %d!\n", port);
+    char succes[128] = {0};
+    sprintf(succes, "[UDP SERVER]: Successfully started server on PORT: %d!\n", port);
+    put_action(ctx->events, succes);
 
     char buffer[BUFFER_SIZE];
     size_t client_address_size = sizeof(client_address);
@@ -54,11 +58,11 @@ void *start_server_udp(void *data) {
     while (!ctx->exit) {
         if ((recvfrom(socket_fd, (char *) buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &client_address,
                       (socklen_t *) &client_address_size)) > BUFFER_SIZE) {
-            printf("[UDP SERVER]: {ERROR} TOO LONG MESSAGE\n");
+            put_action(ctx->events, "[UDP SERVER]: {ERROR} TOO LONG MESSAGE\n");
         }
     }
 
-    printf("[UDP SERVER]: REQUEST: %s\n", buffer);
+    //printf("[UDP SERVER]: REQUEST: %s\n", buffer);
 
     struct file_triplet *triplet = find_triplet(ctx->l, buffer);
 

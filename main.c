@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <pthread.h>
 #include "read_file.h"
-#include "shell_mode.h"
 #include "file_triplet.h"
 #include "context.h"
 #include "udp_server.h"
+#include "ui_module.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -21,6 +21,8 @@ int main(int argc, char *argv[]) {
         struct context *ctx = (struct context *) malloc(sizeof(struct context));
         ctx->l = l;
         ctx->exit = 0;
+
+        iu
         struct events_data *events = malloc(sizeof(struct events_data));
         init_events(events);
         ctx->events = events;
@@ -33,8 +35,9 @@ int main(int argc, char *argv[]) {
 
         pthread_t udp_server;
         pthread_create(&udp_server, NULL, start_server_udp, ctx);
-
-        shell(ctx);
+        puts("before launch");
+            launch(ctx);
+        puts("after launch");
         pthread_join(udp_server, NULL);
 
         list_destroy(l, file_triplet_destroy);

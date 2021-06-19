@@ -20,6 +20,7 @@ struct events_data {
     struct list *upload_list;
     struct list *download_list;
     struct list *actions_list;
+    void *ui_data;
 };
 
 void init_events(struct events_data *events_data);

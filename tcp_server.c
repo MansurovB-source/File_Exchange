@@ -24,7 +24,7 @@ static void conversation(int socket_fd, struct file_triplet *triplet, struct con
     strncpy(progress.triplet.hash, triplet->hash, 64);
     strcpy(progress.triplet.filename, triplet->filename);
 
-    while (strcmp("exit", request.command)) {
+    while (strcmp("exit", request.command) != 0) {
         read(socket_fd, &request, sizeof(request));
         //printf("[TCP SERVER]: From client: %s\t to server: ", request.command);
         if (0 == strncmp("get", request.command, 3)) {
@@ -49,8 +49,6 @@ void init_server_tcp(struct tcp_server_data *server_data) {
     if ((server_data->socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         put_action(server_data->ctx->events, "[TCP SERVER]: {ERROR} Socket creation failed...");
         return;
-    } else {
-        printf("[TCP SERVER]: Socket successfully created... \n");
     }
 
     memset(&server_data->server_address, 0, sizeof(struct sockaddr_in));

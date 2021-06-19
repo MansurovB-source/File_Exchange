@@ -33,7 +33,7 @@ static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, 
         request.arg = 0;
         write(socket_fd, &request, sizeof(request));
         read(socket_fd, &answer, sizeof(answer));
-        printf("[TCP_CLIENT] received data, len: %d\n", answer.len);
+        //printf("[TCP_CLIENT] received data, len: %d\n", answer.len);
         progress.transferred += answer.len;
         put_download(ctx->events, &progress);
         pwrite(file, &answer.payload, answer.len, i);

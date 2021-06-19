@@ -78,9 +78,14 @@ void display_cmd(struct context *ctx, const char *file_name) {
             put_action(ctx->events, triplet_str);
             free(triplet_str);
             free(filesize_str);
+            return;
         }
         node = node->next;
     }
+    char *str = calloc(1, 256);
+    sprintf(str, "Could find file with name %s", file_name);
+    put_action(ctx->events, str);
+    free(str);
 }
 
 void help_cmd(struct context *ctx) {

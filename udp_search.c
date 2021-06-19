@@ -50,7 +50,7 @@ void *search_server_udp(void *data) {
     if ((n = recvfrom(socket_fd, (char *) buffer, BUFFER_SIZE,
                       MSG_WAITALL, (struct sockaddr *) &client_address,
                       (socklen_t *) &client_address_size)) == -1) {
-        perror("[UDP SEARCH]: {ERROR} From udp server");
+        put_action(udp_client_data->ctx->events, "[UDP SEARCH]: {ERROR} Couldn't receive data");
     }
 
     buffer[n] = '\0';
@@ -58,7 +58,7 @@ void *search_server_udp(void *data) {
     struct udp_server_answer *answer = (struct udp_server_answer *) buffer;
 
     if (answer->success) {
-        printf("[UDP SEARCH]: Found, port: %d\n", answer->port);
+        //printf("[UDP SEARCH]: Found, port: %d\n", answer->port);
         pthread_t tcp_client;
         struct tcp_client_data *tcp_client_data = malloc(sizeof(struct tcp_client_data));
         tcp_client_data->port = answer->port;
@@ -67,7 +67,7 @@ void *search_server_udp(void *data) {
         tcp_client_data->ctx = udp_client_data->ctx;
         pthread_create(&tcp_client, NULL, start_client_tcp, tcp_client_data);
     } else {
-        perror("[UDP SEARCH]: {ERROR} Not found");
+        //perror("[UDP SEARCH]: {ERROR} Not found");
     }
 
     close(socket_fd);
