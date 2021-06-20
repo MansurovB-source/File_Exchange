@@ -2,9 +2,8 @@
 // Created by behruz on 17.06.2021.
 //
 
-#include <arpa/inet.h>
+
 #include <netinet/in.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -24,6 +23,7 @@ static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, 
     struct tcp_server_answer answer = {0};
 
     struct progress_transfer *cur_progress = &progress;
+    progress.triplet = tripletDto;
 
     struct list *exist_download = find_download(ctx->events, &progress);
     if (exist_download) {
@@ -31,11 +31,7 @@ static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, 
     } else {
         put_download(ctx->events, &progress);
     }
-    progress.triplet = tripletDto;
-    put_download(ctx->events, &progress);
-
     int file = open(tripletDto.filename, O_WRONLY | O_CREAT, 00777);
-    int counter = 0;
 
     while (cur_progress->global * 4096 < tripletDto.filesize) {
         strncpy(request.command, GET, 3);
@@ -45,7 +41,6 @@ static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, 
         }
         write(socket_fd, &request, sizeof(request));
         read(socket_fd, &answer, sizeof(answer));
-        //printf("[TCP_CLIENT] received data, len: %d\n", answer.len);
         cur_progress->transferred += answer.len;
         put_download(ctx->events, cur_progress);
         pwrite(file, &answer.payload, answer.len, request.arg * 4096);
@@ -58,7 +53,6 @@ static void perform_download(int socket_fd, struct file_triplet_dto tripletDto, 
     close(file);
     strncpy(request.command, EXIT, 4);
     write(socket_fd, &request, sizeof(request));
-    //printf("Client Exit...\n");
 }
 
 void *start_client_tcp(void *data) {
@@ -68,10 +62,8 @@ void *start_client_tcp(void *data) {
     struct sockaddr_in server_address;
 
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("[TCP CLIENT]: {ERROR} socket creation failed...");
-        exit(0);
-    } else {
-        printf("[TCP CLIENT]: Socket successfully created...\n");
+        log_error(client_data->ctx->events, "[TCP CLIENT]: {ERROR} Socket creation failed (%d)");
+        return NULL;
     }
 
     memset(&server_address, 0, sizeof(struct sockaddr_in));
@@ -81,21 +73,14 @@ void *start_client_tcp(void *data) {
     server_address.sin_port = htons(client_data->port);
 
     if (connect(socket_fd, (struct sockaddr *) &server_address, sizeof(server_address)) != 0) {
-        perror("[TCP CLIENT]: {ERROR} Connection with the server failed...");
-        exit(0);
-    } else
-        printf("[TCP CLIENT]: Connected to the server...\n");
+        log_error(client_data->ctx->events, "[TCP CLIENT]: {ERROR} Connection with the server failed (%d)");
+        return NULL;
+    }
 
-    char *start_download = malloc(256);
-    strcat(start_download, "Start downloading the file ");
-    strcat(start_download, client_data->triplet_dto.filename);
-    put_action(client_data->ctx->events, start_download);
+    log_action(client_data->ctx->events, "Started downloading file %s", client_data->triplet_dto.filename);
     perform_download(socket_fd, client_data->triplet_dto, client_data->ctx);
 
-    char *finish_download = malloc(256);
-    strcat(finish_download, "Finished downloading the file ");
-    strcat(finish_download, client_data->triplet_dto.filename);
-    put_action(client_data->ctx->events, finish_download);
+    log_action(client_data->ctx->events, "Finished downloading file %s", client_data->triplet_dto.filename);
 
     close(socket_fd);
     free(client_data);

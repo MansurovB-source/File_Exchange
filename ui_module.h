@@ -9,7 +9,8 @@
 #include "context.h"
 
 struct ui_data {
-    WINDOW *transfer_win;
+    WINDOW *download_win;
+    WINDOW *upload_win;
     WINDOW *events_win;
     WINDOW *input_win;
     struct context *ctx;

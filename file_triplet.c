@@ -7,13 +7,13 @@
 
 //TODO change hash reading
 static struct file_triplet *cmp_triplet(struct file_triplet *t, char *triplet) {
-    char triplet_str[2048] = {0};
+    char triplet_str[1024] = {0};
     strcat(triplet_str, t->filename);
-    strcat(triplet_str, " - ");
+    strcat(triplet_str, ":");
     char size[512] = {0};
     sprintf(size, "%lu", t->filesize);
     strcat(triplet_str, size);
-    strcat(triplet_str, " - ");
+    strcat(triplet_str, ":");
     strncat(triplet_str, t->hash, SHA256_DIGEST_LENGTH * 2);
     if (!strcmp(triplet, triplet_str)) {
         return t;

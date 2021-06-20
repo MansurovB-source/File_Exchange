@@ -18,13 +18,13 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        struct context *ctx = (struct context *) malloc(sizeof(struct context));
-        ctx->l = l;
-        ctx->exit = 0;
-
+        struct context *ctx = malloc(sizeof(struct context));
         struct events_data *events = malloc(sizeof(struct events_data));
         init_events(events);
         ctx->events = events;
+        ctx->l = l;
+        ctx->exit = 0;
+
 
         struct ui_data *ui_data = malloc(sizeof(struct ui_data));
         init_ui_data(ui_data);
@@ -37,10 +37,12 @@ int main(int argc, char *argv[]) {
 //            p_l = p_l->next;
 //        }
 
-        pthread_t udp_server;
-        pthread_create(&udp_server, NULL, start_server_udp, ctx);
+        pthread_t *udp_server = (pthread_t *) malloc(sizeof(pthread_t));
+        pthread_create(udp_server, NULL, start_server_udp, ctx);
+
         launch(ui_data);
-        pthread_join(udp_server, NULL);
+
+        pthread_join(*udp_server, NULL);
 
         list_destroy(l, file_triplet_destroy);
         destroy_events(ctx->events);

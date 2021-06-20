@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <unistd.h>
 #include <pthread.h>
 #include "tcp_server.h"
 
@@ -48,9 +47,9 @@ void *start_server_udp(void *data) {
         server_address.sin_port = htons(port);
     }
 
-    char succes[128] = {0};
-    sprintf(succes, "[UDP SERVER]: Successfully started server on PORT: %d!\n", port);
-    put_action(ctx->events, succes);
+    char success[128] = {0};
+    sprintf(success, "[UDP SERVER]: Successfully started server on PORT: %d!\n", port);
+    put_action(ctx->events, success);
 
     char buffer[BUFFER_SIZE];
     size_t client_address_size = sizeof(client_address);
@@ -69,7 +68,7 @@ void *start_server_udp(void *data) {
         if (triplet) {
             struct udp_server_answer answer = {0};
             //TODO tcp client
-            pthread_t tcp_client;
+            pthread_t *tcp_client = (pthread_t *) malloc(sizeof(pthread_t));
             struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
             server_data->triplet = triplet;
             server_data->ctx = ctx;
@@ -82,7 +81,7 @@ void *start_server_udp(void *data) {
             strncpy(answer.triplet.hash, triplet->hash, 32);
             strcpy(answer.triplet.filename, triplet->filename);
 
-            pthread_create(&tcp_client, NULL, start_server_tcp, server_data);
+            pthread_create(tcp_client, NULL, start_server_tcp, server_data);
 
             sendto(socket_fd, &answer, sizeof(struct udp_server_answer),
                    MSG_CONFIRM, (const struct sockaddr *) &client_address,

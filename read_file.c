@@ -50,7 +50,7 @@ static void get_hex_chars(uint8_t byte, char *hex) {
 
 void list_add_front_file_triplet(struct list **l, const char *dir_path, const char *file_name,
                                  const char *filename_with_path) {
-    char filename[strlen(dir_path) + strlen(file_name) + 2];
+    char filename[512] = {0};
     char relative_path[512] = {0};
     strcpy(filename, dir_path);
     strcat(filename, "/");
@@ -60,24 +60,25 @@ void list_add_front_file_triplet(struct list **l, const char *dir_path, const ch
         strcat(relative_path, filename_with_path);
     }
     strcat(relative_path, file_name);
-//    strcat(relative_path, "/");
 
     struct file_triplet *triplet = (struct file_triplet *) malloc(sizeof(struct file_triplet));
     FILE *file = fopen(filename, "rb");
-    if (file == NULL) {
-        perror("Can't open file ");
-        return;
-    }
-    triplet->filename = malloc(strlen(filename) + 1);
+//    if (file == NULL) {
+//        perror("Can't open file ");
+//        return;
+//    }
+    triplet->filename = malloc(256);
     triplet->filepath = malloc(512);
     strcpy(triplet->filename, filename);
     strcpy(triplet->filepath, relative_path);
+
     fseek(file, 0, SEEK_END);
     triplet->filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    uint8_t hash[SHA256_DIGEST_LENGTH];
+    uint8_t hash[SHA256_DIGEST_LENGTH] = {0};
     calc_hash(file, hash);
+
     for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         char hex[2];
         get_hex_chars(hash[i], hex);
@@ -90,12 +91,12 @@ void list_add_front_file_triplet(struct list **l, const char *dir_path, const ch
 
 }
 
-int read_directory(char *filename, uint32_t space_count, struct list **l, char *relative_path) {
+int read_directory(char *dir_path, uint32_t space_count, struct list **l, char *relative_path) {
     errno = 0;
-    DIR *directory = opendir(filename);
+    DIR *directory = opendir(dir_path);
 
     if (directory == NULL) {
-        perror("Can't read directory ");
+        //perror("Can't read directory ");
         return -1;
     }
 
@@ -106,12 +107,12 @@ int read_directory(char *filename, uint32_t space_count, struct list **l, char *
         if (is_special_dir(dir_entry->d_name)) {
             continue;
         }
-        print_space(current_space_count);
+        //print_space(current_space_count);
 
         if (is_dir(dir_entry)) {
-            printf("|-- DIR: %s\n", dir_entry->d_name);
-            char full_path[strlen(filename) + strlen(dir_entry->d_name) + 2];
-            strcpy(full_path, filename);
+            //printf("|-- DIR: %s\n", dir_entry->d_name);
+            char full_path[512] = {0};
+            strcpy(full_path, dir_path);
             strcat(full_path, "/");
             strcat(full_path, dir_entry->d_name);
 
@@ -124,8 +125,8 @@ int read_directory(char *filename, uint32_t space_count, struct list **l, char *
 
             read_directory(full_path, current_space_count, l, full_relative_path);
         } else {
-            printf("|-- FILE: %s\n", dir_entry->d_name);
-            list_add_front_file_triplet(l, filename, dir_entry->d_name, relative_path);
+            //printf("|-- FILE: %s\n", dir_entry->d_name);
+            list_add_front_file_triplet(l, dir_path, dir_entry->d_name, relative_path);
         }
     }
     closedir(directory);

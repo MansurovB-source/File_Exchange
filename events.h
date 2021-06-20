@@ -42,5 +42,10 @@ struct list *find_download(struct events_data *events_data, struct progress_tran
 
 struct list *find_upload(struct events_data *events_data, struct progress_transfer *progress);
 
+void log_error(struct events_data *events_data, char *msg);
+
+void log_action(struct events_data *events_data, const char *msg, const char *arg);
+
+
 
 #endif //FILE_EXCHANGE_EVENTS_H

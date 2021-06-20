@@ -18,13 +18,13 @@ const static char *EXIT_CMD = "exit";
 const static char *HELP_CMD = "help";
 const static char *UNKNOWN_COMMAND = "unknown_cmd";
 
-static int parse(const char *cmd, char **triplet) {
+int parse(const char *cmd, char **args) {
     const char *p = cmd;
     int count = 0;
 
     for (;;) {
         while (isspace(*p)) p++;
-        if (count >= 4) {
+        if (count >= 3) {
             return count;
         }
         if (*p == '\0') break;
@@ -33,38 +33,43 @@ static int parse(const char *cmd, char **triplet) {
             int quote = *p++;
             const char *begin = p;
 
-            while (*p && *p != quote) { p++; }
-            if (*p == '\0') {
-                perror("Unmatched quote");
-                return -1;
-            }
-            strncpy(triplet[count], begin, p - begin);
+            while (*p && *p != quote) p++;
+            if (*p == '\0') return -1;
+            strncpy(args[count], begin, p - begin);
             count++;
             p++;
             continue;
         }
 
-        if (isalnum(*p) || *p == '.' || *p == '/') {
+        if (strchr("<>()|", *p)) {
+            args[count] = calloc(1, 256);
+            strncpy(args[count], p, 1);
+            count++;
+            p++;
+            continue;
+        }
+
+        if (isalnum(*p) || *p == '.' || *p == '/' || *p == '-' || *p == ':') {
             const char *begin = p;
 
-            while (isalnum(*p) || *p == '.' || *p == '/') p++;
-            strncpy(triplet[count], begin, p - begin);
+            while (isalnum(*p) || *p == '.' || *p == '/' || *p == '-' || *p == ':') p++;
+            strncpy(args[count], begin, p - begin);
             count++;
             continue;
         }
 
-        perror("Illegal character");
         return -1;
     }
+
     return count;
 }
 
-void display_cmd(struct context *ctx, const char *file_name) {
+void display_cmd(struct context *ctx, const char *path) {
     struct list *node = ctx->l;
 
-    while (node != NULL) {
-        struct file_triplet *triplet = node->value;
-        if (!strcmp(triplet->filepath, file_name)) {
+    while (node->value != NULL) {
+        struct file_triplet *triplet = (struct file_triplet *) node->value;
+        if (!strcmp(triplet->filepath, path)) {
             char *triplet_str = malloc(256);
             char *filesize_str = malloc(16);
 
@@ -73,7 +78,7 @@ void display_cmd(struct context *ctx, const char *file_name) {
             sprintf(filesize_str, "%ld", triplet->filesize);
             strcat(triplet_str, filesize_str);
             strcat(triplet_str, ":");
-            strncat(triplet_str, triplet->hash, 64);
+            strncat(triplet_str, triplet->hash, 32);
 
             put_action(ctx->events, triplet_str);
             free(triplet_str);
@@ -82,10 +87,7 @@ void display_cmd(struct context *ctx, const char *file_name) {
         }
         node = node->next;
     }
-    char *str = calloc(1, 256);
-    sprintf(str, "Could find file with name %s", file_name);
-    put_action(ctx->events, str);
-    free(str);
+    log_action(ctx->events, "Could find file %s", path);
 }
 
 void help_cmd(struct context *ctx) {
@@ -105,8 +107,6 @@ void download_cmd(const char *triplet, struct context *ctx) {
 
     pthread_t *search_udp = (pthread_t *) malloc(sizeof(pthread_t));
     pthread_create(search_udp, NULL, search_server_udp, udp_client_data);
-
-
 }
 
 
@@ -125,13 +125,13 @@ int8_t handler_cmd(struct context *ctx, const char *cmd) {
         display_cmd(ctx, triplet[1]);
     } else if (!strcmp(triplet[0], DOWNLOAD_CMD)) {
         download_cmd(triplet[1], ctx);
-    } else if (!strcmp(triplet[0], HELP_CMD)) {
+    } else if (!strncmp(triplet[0], HELP_CMD, 4)) {
         help_cmd(ctx);
-    } else if (!strcmp(triplet[0], EXIT_CMD)) {
+    } else if (!strncmp(triplet[0], EXIT_CMD, 4)) {
         code = 1;
         ctx->exit = 1;
     } else {
-        put_action(ctx->events, UNKNOWN_COMMAND);
+        put_action(ctx->events, triplet[0]);
     }
 
     free(triplet[0]);
