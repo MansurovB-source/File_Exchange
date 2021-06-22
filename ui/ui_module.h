@@ -5,7 +5,7 @@
 #ifndef FILE_EXCHANGE_UI_MODULE_H
 #define FILE_EXCHANGE_UI_MODULE_H
 
-#include "context.h"
+#include "../utils/context.h"
 #include <curses.h>
 
 struct ui_data {

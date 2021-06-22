@@ -7,8 +7,8 @@
 
 #include <stdint.h>
 #include <netinet/in.h>
-#include "read_file.h"
-#include "context.h"
+#include "../utils/dir_reader/read_file.h"
+#include "../utils/context.h"
 
 struct tcp_server_answer {
     uint16_t len;

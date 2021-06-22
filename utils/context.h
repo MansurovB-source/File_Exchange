@@ -6,8 +6,8 @@
 #define FILE_EXCHANGE_CONTEXT_H
 
 #include <stdint.h>
-#include "list.h"
-#include "events.h"
+#include "list/list.h"
+#include "../event/events.h"
 
 struct context {
     struct list *triplet_list;

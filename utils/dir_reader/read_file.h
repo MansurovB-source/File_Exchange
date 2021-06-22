@@ -6,11 +6,11 @@
 #define FILE_EXCHANGE_READ_FILE_H
 
 #include <stdint.h>
-#include "list.h"
+#include "../list/list.h"
 
 #include <stdint.h>
 #include <openssl/sha.h>
-#include "list.h"
+#include "../list/list.h"
 
 struct file_triplet {
     char *filename;

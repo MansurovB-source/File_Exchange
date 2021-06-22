@@ -7,7 +7,7 @@
 #include <time.h>
 #include <errno.h>
 #include "events.h"
-#include "ui_module.h"
+#include "../ui/ui_module.h"
 
 
 static struct list *find_transfer_progress(struct list *transfer_list, struct transfer_progress *transfer_progress) {

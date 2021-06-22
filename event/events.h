@@ -7,8 +7,8 @@
 
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
-#include "list.h"
-#include "read_file.h"
+#include "../utils/list/list.h"
+#include "../utils/dir_reader/read_file.h"
 
 struct transfer_progress {
     size_t transferred;

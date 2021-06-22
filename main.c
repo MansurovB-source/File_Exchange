@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <pthread.h>
-#include "read_file.h"
-#include "list.h"
-#include "udp_server.h"
-#include "ui_module.h"
-#include "events.h"
+#include "utils/dir_reader/read_file.h"
+#include "utils/list/list.h"
+#include "network/udp_server.h"
+#include "ui/ui_module.h"
+#include "event/events.h"
 
 int main(int argc, char **argv) {
     if (argc < 2) {

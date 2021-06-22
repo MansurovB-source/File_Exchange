@@ -9,8 +9,8 @@
 #include <pthread.h>
 #include "command_handler.h"
 #include "util.h"
-#include "read_file.h"
-#include "udp_search.h"
+#include "dir_reader/read_file.h"
+#include "../network/udp_search.h"
 
 const static char *DISPLAY_CMD = "display";
 const static char *DOWNLOAD_CMD = "download";

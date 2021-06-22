@@ -7,9 +7,9 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdint.h>
-#include "list.h"
+#include "../list/list.h"
 #include "read_file.h"
-#include "util.h"
+#include "../util.h"
 
 static uint8_t is_special_dir(char *dir_name) {
     return 0 == strcmp(".", dir_name) || 0 == strcmp("..", dir_name);

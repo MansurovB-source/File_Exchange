@@ -11,25 +11,25 @@ include_directories(${CURSES_INCLUDE_DIR})
 
 add_executable(File_Exchange
         main.c
-        read_file.c
-        read_file.h
-        list.h
-        list.c
-        command_handler.c
-        command_handler.h
-        udp_search.c
-        udp_search.h
-        udp_server.c
-        udp_server.h
-        context.h
-        tcp_client.c
-        tcp_client.h
-        tcp_server.c
-        tcp_server.h
-        events.c
-        events.h
-        ui_module.c
-        ui_module.h
-        util.c
-        util.h)
+        utils/dir_reader/read_file.c
+        utils/dir_reader/read_file.h
+        utils/list/list.h
+        utils/list/list.c
+        utils/command_handler.c
+        utils/command_handler.h
+        network/udp_search.c
+        network/udp_search.h
+        network/udp_server.c
+        network/udp_server.h
+        utils/context.h
+        network/tcp_client.c
+        network/tcp_client.h
+        network/tcp_server.c
+        network/tcp_server.h
+        event/events.c
+        event/events.h
+        ui/ui_module.c
+        ui/ui_module.h
+        utils/util.c
+        utils/util.h)
 target_link_libraries(File_Exchange OpenSSL::SSL Threads::Threads ${CURSES_LIBRARIES})

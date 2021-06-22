@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "ui_module.h"
-#include "command_handler.h"
+#include "../utils/command_handler.h"
 
 void focus_input(struct ui_data *data) {
     int32_t x, y;
