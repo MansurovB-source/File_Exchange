@@ -15,8 +15,6 @@ add_executable(File_Exchange
         read_file.h
         list.h
         list.c
-        file_triplet.h
-        file_triplet.c
         command_handler.c
         command_handler.h
         udp_search.c
@@ -29,5 +27,9 @@ add_executable(File_Exchange
         tcp_server.c
         tcp_server.h
         events.c
-        events.h ui_module.c ui_module.h)
+        events.h
+        ui_module.c
+        ui_module.h
+        util.c
+        util.h)
 target_link_libraries(File_Exchange OpenSSL::SSL Threads::Threads ${CURSES_LIBRARIES})

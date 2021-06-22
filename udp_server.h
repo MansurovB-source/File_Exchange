@@ -5,17 +5,14 @@
 #ifndef FILE_EXCHANGE_UDP_SERVER_H
 #define FILE_EXCHANGE_UDP_SERVER_H
 
-#include <stdint.h>
-#include "stdio.h"
-#include "file_triplet.h"
+#include "read_file.h"
 
 struct udp_server_answer {
-    uint8_t success;
+    int8_t success;
     uint16_t port;
-    //TODO struct file_triplet_dto;
     struct file_triplet_dto triplet;
 };
 
-void *start_server_udp(void *data);
+void *start_udp_server(void *thread_data);
 
 #endif //FILE_EXCHANGE_UDP_SERVER_H

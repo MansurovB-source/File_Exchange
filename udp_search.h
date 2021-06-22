@@ -7,11 +7,11 @@
 
 #include "context.h"
 
-void *search_server_udp(void *data);
-
 struct udp_client_data {
     char *triplet_str;
     struct context *ctx;
 };
+
+void *search_udp_servers(void *thread_data);
 
 #endif //FILE_EXCHANGE_UDP_SEARCH_H

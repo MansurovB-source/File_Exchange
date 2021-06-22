@@ -5,14 +5,14 @@
 #ifndef FILE_EXCHANGE_CONTEXT_H
 #define FILE_EXCHANGE_CONTEXT_H
 
+#include <stdint.h>
 #include "list.h"
 #include "events.h"
 
-
 struct context {
-    struct list *l;
+    struct list *triplet_list;
+    struct events_data *events_module;
     int8_t exit;
-    struct events_data *events;
 };
 
 #endif //FILE_EXCHANGE_CONTEXT_H

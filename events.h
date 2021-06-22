@@ -5,10 +5,12 @@
 #ifndef FILE_EXCHANGE_EVENTS_H
 #define FILE_EXCHANGE_EVENTS_H
 
-#include "list.h"
+#include <bits/pthreadtypes.h>
 #include <pthread.h>
+#include "list.h"
+#include "read_file.h"
 
-struct progress_transfer {
+struct transfer_progress {
     size_t transferred;
     struct file_triplet_dto triplet;
     _Atomic size_t global;
@@ -24,28 +26,26 @@ struct events_data {
     void *ui_data;
 };
 
-void init_events(struct events_data *events_data);
+void init_events_module(struct events_data *events_data);
 
-void destroy_events(struct events_data *events_data);
+void destroy_events_module(struct events_data *events_data);
 
-void put_action(struct events_data *events_data, char *str);
+struct list *find_download(struct events_data *events_data, struct transfer_progress *transfer_progress);
 
-void put_download(struct events_data *events_data, struct progress_transfer *transfer_progress);
+struct list *find_upload(struct events_data *events_data, struct transfer_progress *transferProgress);
 
-void del_download(struct events_data *events_data, struct progress_transfer *transfer_progress);
+void put_download(struct events_data *events_data, struct transfer_progress *transfer_progress);
 
-void put_upload(struct events_data *events_data, struct progress_transfer *transfer_progress);
+void del_download(struct events_data *events_data, struct transfer_progress *transfer_progress);
 
-void del_upload(struct events_data *events_data, struct progress_transfer *transfer_progress);
+void put_upload(struct events_data *events_data, struct transfer_progress *transfer_progress);
 
-struct list *find_download(struct events_data *events_data, struct progress_transfer *progress);
+void del_upload(struct events_data *events_data, struct transfer_progress *transferProgress);
 
-struct list *find_upload(struct events_data *events_data, struct progress_transfer *progress);
+void put_action(struct events_data *events_data, const char *str);
 
 void log_error(struct events_data *events_data, char *msg);
 
 void log_action(struct events_data *events_data, const char *msg, const char *arg);
-
-
 
 #endif //FILE_EXCHANGE_EVENTS_H

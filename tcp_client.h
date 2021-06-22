@@ -5,7 +5,9 @@
 #ifndef FILE_EXCHANGE_TCP_CLIENT_H
 #define FILE_EXCHANGE_TCP_CLIENT_H
 
-#include "file_triplet.h"
+#include <stdint.h>
+#include <netinet/in.h>
+#include "read_file.h"
 #include "context.h"
 
 struct tcp_server_answer {
@@ -15,11 +17,11 @@ struct tcp_server_answer {
 
 struct tcp_client_data {
     uint16_t port;
-    struct file_triplet_dto triplet_dto;
-    in_addr_t server_address;
+    struct file_triplet_dto triplet;
+    in_addr_t server_addr;
     struct context *ctx;
 };
 
-void *start_client_tcp(void *data);
+void *start_tcp_client(void *thread_data);
 
 #endif //FILE_EXCHANGE_TCP_CLIENT_H

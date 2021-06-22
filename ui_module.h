@@ -5,8 +5,8 @@
 #ifndef FILE_EXCHANGE_UI_MODULE_H
 #define FILE_EXCHANGE_UI_MODULE_H
 
-#include <ncurses.h>
 #include "context.h"
+#include <curses.h>
 
 struct ui_data {
     WINDOW *download_win;
@@ -16,18 +16,14 @@ struct ui_data {
     struct context *ctx;
 };
 
-void launch(struct ui_data *data);
+void render_transfer_area(struct ui_data *data, int8_t do_clear);
 
-void render_screen(struct ui_data *ui_data);
-
-void destroy_ui_data(struct ui_data *data);
+void render_events_log(struct ui_data *data, int8_t do_clear);
 
 void init_ui_data(struct ui_data *data);
 
-void render_input_field(struct ui_data *data);
+void destroy_ui_data(struct ui_data *data);
 
-void render_log_area(struct ui_data *data, char do_clear);
-
-void render_transfer_area(struct ui_data *data, char do_clear);
+void start_ui(struct ui_data *ui_data);
 
 #endif //FILE_EXCHANGE_UI_MODULE_H

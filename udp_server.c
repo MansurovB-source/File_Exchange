@@ -2,92 +2,118 @@
 // Created by behruz on 14.06.2021.
 //
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <pthread.h>
+
 #include "udp_server.h"
 #include "context.h"
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <pthread.h>
 #include "tcp_server.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 2048
+#define BUF_SIZE 1024
 
-void *start_server_udp(void *data) {
-    struct context *ctx = data;
+struct file_triplet *find_triplet(struct list *triplet_list, char *str) {
+    struct list *element = triplet_list;
+    while (element->value != NULL) {
+        char triplet_str[1024] = {0};
+        struct file_triplet *triplet = ((struct file_triplet *) element->value);
+        strcat(triplet_str, triplet->filename);
+        strcat(triplet_str, ":");
+        char snum[1024];
+        sprintf(snum, "%ld", triplet->filesize);
+        strcat(triplet_str, snum);
+        strcat(triplet_str, ":");
+        strncat(triplet_str, triplet->hash, SHA256_DIGEST_LENGTH);
+        if (!strcmp(str, triplet_str)) {
+            return triplet;
+        }
+        element = element->next;
+    }
+    return NULL;
+}
 
-    //TODO get data from data {list and exit flag ?}
-
+void *start_udp_server(void *thread_data) {
+    struct context *ctx = thread_data;
     int socket_fd;
+    char buffer[BUF_SIZE] = {0};
+    struct sockaddr_in server_address, client_address;
     if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("[UDP SERVER]: {ERROR} Socket creation failed");
-        exit(-1);
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
     }
 
-    struct sockaddr_in server_address;
-    struct sockaddr_in client_address;
-
-    memset(&server_address, 0, sizeof(struct sockaddr_in));
-    memset(&client_address, 0, sizeof(struct sockaddr_in));
-
     int broadcast = 1;
-    setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
 
     uint16_t port = PORT;
 
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(port);
-    server_address.sin_addr.s_addr = INADDR_ANY;
+    setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST,
+               &broadcast, sizeof broadcast);
 
-    while (bind(socket_fd, (const struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
-        char fail[128] = {0};
-        sprintf(fail, "[UDP SERVER]: {ERROR} Binding on port %d failed\n", port++);
-        put_action(ctx->events, fail);
+    memset(&server_address, 0, sizeof(server_address));
+    memset(&client_address, 0, sizeof(client_address));
+
+    // Filling server information
+    server_address.sin_family = AF_INET; // IPv4
+    server_address.sin_addr.s_addr = INADDR_ANY;
+    server_address.sin_port = htons(port);
+
+    // Bind the socket with the server address
+    while (bind(socket_fd, (const struct sockaddr *) &server_address,
+                sizeof(server_address)) < 0) {
+        char bind_failed[64] = {0};
+        sprintf(bind_failed, "[UDP-server] {ERROR} Binding on port %d is failed", port++);
+        put_action(ctx->events_module, bind_failed);
         server_address.sin_port = htons(port);
     }
 
-    char success[128] = {0};
-    sprintf(success, "[UDP SERVER]: Successfully started server on PORT: %d!\n", port);
-    put_action(ctx->events, success);
+    char bind_successful[64] = {0};
+    sprintf(bind_successful, "[UDP-server] Successfully started server on port %d!", port);
+    put_action(ctx->events_module, bind_successful);
 
-    char buffer[BUFFER_SIZE];
-    size_t client_address_size = sizeof(client_address);
+    uint32_t len, n;
+
+    len = sizeof(client_address);
 
     while (!ctx->exit) {
-        memset(buffer, 0, BUFFER_SIZE);
-        if ((recvfrom(socket_fd, (char *) buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &client_address,
-                      (socklen_t *) &client_address_size)) > BUFFER_SIZE) {
-            put_action(ctx->events, "[UDP SERVER]: {ERROR} TOO LONG MESSAGE\n");
+        memset(buffer, 0, BUF_SIZE);
+        n = recvfrom(socket_fd, (char *) buffer, BUF_SIZE,
+                     MSG_WAITALL, (struct sockaddr *) &client_address,
+                     &len);
+
+        if (n > BUF_SIZE) {
+            put_action(ctx->events_module, "[UDP-server] {ERROR} Too long message");
         }
 
-        //printf("[UDP SERVER]: REQUEST: %s\n", buffer);
+        struct file_triplet *pTriplet = find_triplet(ctx->triplet_list, buffer);
 
-        struct file_triplet *triplet = find_triplet(ctx->l, buffer);
-
-        if (triplet) {
+        if (pTriplet) {
             struct udp_server_answer answer = {0};
-            //TODO tcp client
-            pthread_t *tcp_client = (pthread_t *) malloc(sizeof(pthread_t));
+
+            pthread_t *tcp_server = (pthread_t *) malloc(sizeof(pthread_t));
             struct tcp_server_data *server_data = malloc(sizeof(struct tcp_server_data));
-            server_data->triplet = triplet;
+            server_data->triplet = pTriplet;
             server_data->ctx = ctx;
-            init_server_tcp(server_data);
+            init_tcp_server(server_data);
 
             answer.success = 1;
             answer.port = server_data->port;
-            answer.triplet.filesize = triplet->filesize;
-            //TODO hash size ?
-            strncpy(answer.triplet.hash, triplet->hash, 32);
-            strcpy(answer.triplet.filename, triplet->filename);
+            answer.triplet.filesize = pTriplet->filesize;
+            strncpy(answer.triplet.hash, pTriplet->hash, 32);
+            strcpy(answer.triplet.filename, pTriplet->filename);
 
-            pthread_create(tcp_client, NULL, start_server_tcp, server_data);
+            pthread_create(tcp_server, NULL, start_tcp_server, server_data);
 
             sendto(socket_fd, &answer, sizeof(struct udp_server_answer),
                    MSG_CONFIRM, (const struct sockaddr *) &client_address,
-                   client_address_size);
-
+                   len);
         }
     }
+
     return NULL;
 }
