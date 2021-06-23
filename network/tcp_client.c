@@ -4,7 +4,6 @@
 
 #include "tcp_client.h"
 #include "tcp_server.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -24,7 +23,6 @@ void perform_download(int socket_fd, struct file_triplet_dto triplet, struct con
     progress.triplet = triplet;
     struct list *existing_download = find_download(ctx->events_module, &progress);
     if (existing_download) {
-        //put_action(ctx->events_module, "seconddddddddddddddddddddddddddddddddddddd");
         cur_progress = existing_download->value;
     } else {
         put_download(ctx->events_module, &progress);
@@ -82,5 +80,5 @@ void *start_tcp_client(void *thread_data) {
     return NULL;
 }
 
-download "progit.pdf:17763840:CD5246703E9742BFBDD56C18F9985199"
-download "util.c:11499:9182245C29B08F589E2B6970380EBC85"
+//download "progit.pdf:17763840:CD5246703E9742BFBDD56C18F9985199"
+//download "util.c:11499:9182245C29B08F589E2B6970380EBC85"

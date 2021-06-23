@@ -90,6 +90,8 @@ void *start_udp_server(void *thread_data) {
             put_action(ctx->events_module, "[UDP-server] {ERROR} Too long message");
         }
 
+        put_action(ctx->events_module, "[UDP-server] client");
+
         struct file_triplet *pTriplet = find_triplet(ctx->triplet_list, buffer);
 
         if (pTriplet) {

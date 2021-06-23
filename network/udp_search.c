@@ -10,12 +10,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 
 #include "udp_search.h"
 #include "udp_server.h"
 #include "tcp_client.h"
 
-#define PORT    8080
+#define PORT 8080
 #define BUF_SIZE 1024
 
 void *search_udp_servers(void *thread_data) {
@@ -32,6 +33,8 @@ void *search_udp_servers(void *thread_data) {
     }
 
     int broadcast = 1;
+    setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST,
+               &broadcast, sizeof broadcast);
 
     struct timeval tv;
     tv.tv_sec = 1;
@@ -42,15 +45,15 @@ void *search_udp_servers(void *thread_data) {
         return NULL;
     }
 
-    setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST,
-               &broadcast, sizeof broadcast);
 
     memset(&server_address, 0, sizeof(server_address));
     memset(&client_address, 0, sizeof(client_address));
 
     server_address.sin_family = AF_INET;
+    inet_pton(AF_INET, "255.255.255.255", &server_address.sin_addr);
     server_address.sin_port = htons(PORT);
-    server_address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    //server_address.sin_addr.s_addr = inet_addr("172.30.255.255");
+    //server_address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 
     size_t n, len;
 
@@ -79,6 +82,8 @@ void *search_udp_servers(void *thread_data) {
             put_action(udp_cd->ctx->events_module, "[UDP-search] file not found");
             break;
         }
+
+        put_action(udp_cd->ctx->events_module, "[UDP SEARCH] server");
         received_smth = 1;
 
         buffer[n] = '\0';

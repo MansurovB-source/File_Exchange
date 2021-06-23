@@ -14,9 +14,10 @@
 #include "tcp_client.h"
 
 void serve_client(int socket_fd, struct file_triplet *triplet, struct context *ctx) {
-    char relative_path[256] = {0};
-    sprintf(relative_path, "./%s", triplet->filepath);
-    int current_file = open(relative_path, O_RDONLY, 00666);
+//    char relative_path[256] = {0};
+//    sprintf(relative_path, "./%s", triplet->filepath);
+    put_action(ctx->events_module, triplet->filefullpath);
+    int current_file = open(triplet->filefullpath, O_RDONLY, 00666);
     struct tcp_server_request request = {0};
     struct tcp_server_answer answer = {0};
     struct transfer_progress progress = {0};

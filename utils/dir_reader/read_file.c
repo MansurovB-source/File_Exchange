@@ -55,8 +55,11 @@ struct list *populate_list(struct list *l, const char *dir_path, const char *fil
 
     net_triplet->filename = malloc(256);
     net_triplet->filepath = malloc(512);
+    net_triplet->filefullpath = malloc(512);
+
     strcpy(net_triplet->filename, file_name);
     strcpy(net_triplet->filepath, relative_path);
+    strcpy(net_triplet->filefullpath, filename);
 
     fseek(file, 0, SEEK_END);
     net_triplet->filesize = ftell(file);
