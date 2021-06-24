@@ -5,7 +5,7 @@
 #ifndef FILE_EXCHANGE_EVENTS_H
 #define FILE_EXCHANGE_EVENTS_H
 
-#include <bits/pthreadtypes.h>
+
 #include <pthread.h>
 #include "../utils/list/list.h"
 #include "../utils/dir_reader/read_file.h"

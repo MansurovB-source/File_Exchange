@@ -68,8 +68,9 @@ void *search_udp_servers(void *thread_data) {
     }
 
     int8_t received_smth = 0;
-
+    int beh = 0;
     while (1) {
+        beh++;
         memset(buffer, 0, BUF_SIZE);
         n = recvfrom(socket_fd, (char *) buffer, BUF_SIZE,
                      MSG_WAITALL, (struct sockaddr *) &client_address,
@@ -84,6 +85,7 @@ void *search_udp_servers(void *thread_data) {
         }
 
         put_action(udp_cd->ctx->events_module, "[UDP SEARCH] server");
+
         received_smth = 1;
 
         buffer[n] = '\0';
